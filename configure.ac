@@ -33,7 +33,7 @@ AC_FUNC_MMAP
 AC_CHECK_LIB(z,zlibVersion,LIBS="$LIBS -lz",[AC_MSG_ERROR([zlib not found])])
 
 # Check for readline support
-SDCV_CHECK_READLINE
+#SDCV_CHECK_READLINE
 
 PKG_CHECK_MODULES(SDCV, glib-2.0 >= 2.6.1)
 
@@ -49,7 +49,8 @@ AC_SUBST(LIB_STARDICT_CFLAGS)
 AC_OUTPUT([
  Makefile 
  m4/Makefile 
- src/lib/Makefile 
+ src/lib/Makefile
+ src/cJSON/Makefile  
  src/Makefile 
  doc/Makefile 
  doc/uk/Makefile

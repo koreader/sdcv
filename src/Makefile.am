@@ -1,4 +1,4 @@
-SUBDIRS=lib
+SUBDIRS=lib cJSON
 bin_PROGRAMS = sdcv
 sdcv_SOURCES = \
 	sdcv.cpp getopt.c getopt1.c getopt.h \
@@ -6,9 +6,9 @@ sdcv_SOURCES = \
 	readline.cpp readline.hpp \
 	utils.cpp utils.hpp
 
-sdcv_DEPENDENCIES = lib/libstardict.a
-sdcv_LDADD = @SDCV_LIBS@ @LIBINTL@ @LIBREADLINE@ lib/libstardict.a
+sdcv_DEPENDENCIES = lib/libstardict.a cJSON/libcJSON.a
+sdcv_LDADD = @SDCV_LIBS@ @LIBINTL@ lib/libstardict.a cJSON/libcJSON.a
 localedir = $(datadir)/locale
 
-INCLUDES = @SDCV_CFLAGS@  -I$(top_builddir) -Ilib
+INCLUDES = @SDCV_CFLAGS@  -I$(top_builddir) -Ilib -IcJSON
 DEFS=-DLOCALEDIR=\"$(localedir)\" @DEFS@
