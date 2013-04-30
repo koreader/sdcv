@@ -27,7 +27,7 @@
 #undef HAVE_MEMORY_H
 
 /* Define to 1 if you have a working `mmap' system call. */
-#undef HAVE_MMAP
+#define HAVE_MMAP 1
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
