@@ -1,0 +1,12 @@
+*.o
+Makefile
+*.log
+*.a
+src/sdcv
+config.h
+config.status
+po/Makefile.in
+po/POTFILES
+src/.deps/
+src/lib/.deps/
+stamp-h1
