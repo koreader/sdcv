@@ -29,6 +29,8 @@
 
 #include "libwrapper.hpp"
 
+#include "cJSON.h"
+
 
 static std::string xdxf2text(const char *p)
 {
@@ -255,7 +257,7 @@ private:
 	FILE *output;
 };
 
-bool Library::process_phrase(const char *loc_str, read_line &io, bool force)
+bool Library::process_phrase(const char *loc_str, read_line &io, bool force, bool json)
 {
 	if (NULL==loc_str)
 		return true;
@@ -368,10 +370,33 @@ bool Library::process_phrase(const char *loc_str, read_line &io, bool force)
 			}		
 		} else {
 			sdcv_pager pager(force);
-			fprintf(pager.get_stream(), _("Found %d items, similar to %s.\n"), 
-				res_list.size(), utf8_output ? str : utf8_to_locale_ign_err(str).c_str());
-			for (PSearchResult ptr=res_list.begin(); ptr!=res_list.end(); ++ptr)
-				print_search_result(pager.get_stream(), *ptr);
+			if (!json) {
+				fprintf(pager.get_stream(), _("Found %d items, similar to %s.\n"),
+					res_list.size(), utf8_output ? str : utf8_to_locale_ign_err(str).c_str());
+				for (PSearchResult ptr=res_list.begin(); ptr!=res_list.end(); ++ptr)
+					print_search_result(pager.get_stream(), *ptr);
+			} else {
+				char *out;
+				cJSON *root,*fld;
+				root=cJSON_CreateArray();
+				for (PSearchResult ptr=res_list.begin(); ptr!=res_list.end(); ++ptr) {
+					const TSearchResult & res = *ptr;
+					string loc_bookname, loc_def, loc_exp;
+					if(!utf8_output){
+						loc_bookname=utf8_to_locale_ign_err(res.bookname);
+						loc_def=utf8_to_locale_ign_err(res.def);
+						loc_exp=utf8_to_locale_ign_err(res.exp);
+					}
+					cJSON_AddItemToArray(root,fld=cJSON_CreateObject());
+					cJSON_AddStringToObject(fld, "dict", utf8_output ? res.bookname.c_str() : loc_bookname.c_str());
+					cJSON_AddStringToObject(fld, "word", utf8_output ? res.def.c_str() : loc_def.c_str());
+					cJSON_AddStringToObject(fld, "definition", utf8_output ? res.exp.c_str() : loc_exp.c_str());
+				}
+				out=cJSON_Print(root);
+				cJSON_Delete(root);
+				fprintf(pager.get_stream(), "%s", out);
+				free(out);
+			}
 		}
     
 	} else {

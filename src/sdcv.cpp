@@ -48,6 +48,7 @@ struct option longopts[] ={
 	{"list-dicts", no_argument, NULL, 'l'},
 	{"use-dict", required_argument, NULL, 'u'},
 	{"non-interactive", no_argument, NULL, 'n'},
+	{"json-output", no_argument, NULL, 'j'},
 	{"utf8-output", no_argument, NULL, 0},
 	{"utf8-input", no_argument, NULL, 1},
 	{"data-dir", required_argument, NULL, 2},
@@ -90,11 +91,12 @@ int main(int argc, char *argv[])
 	int optc;
 	bool h = false, v = false, show_list_dicts=false, 
 		use_book_name=false, non_interactive=false, 
+		json_output=false,
 		utf8_output=false, utf8_input=false;
 	strlist_t enable_list;
 	string data_dir;
 	int option_index = 0;
-	while ((optc = getopt_long (argc, argv, "hvu:ln", longopts, 
+	while ((optc = getopt_long (argc, argv, "hvu:lnj", longopts,
 				    &option_index))!=-1)
 		switch (optc){
 		case 0:
@@ -122,6 +124,9 @@ int main(int argc, char *argv[])
 		case 'n':
 			non_interactive=true;
 			break;
+		case 'j':
+			json_output=true;
+			break;
 		case '?':
 			fprintf(stderr, 
 				_("Unknown option.\nTry '%s --help' for more information.\n"), 
@@ -137,6 +142,7 @@ int main(int argc, char *argv[])
 		printf(_("-l, --list-dicts         display list of available dictionaries and exit\n"));
 		printf(_("-u, --use-dict bookname  for search use only dictionary with this bookname\n"));
 		printf(_("-n, --non-interactive    for use in scripts\n"));
+		printf(_("-j, --json-output        for use in scripts\n"));
 		printf(_("--utf8-output            output must be in utf8\n"));
 		printf(_("--utf8-input             input of sdcv in utf8\n"));
 		printf(_("--data-dir path/to/dir   use this directory as path to stardict data directory\n"));
@@ -199,7 +205,7 @@ int main(int argc, char *argv[])
 	std::auto_ptr<read_line> io(create_readline_object());
 	if (optind < argc) {
 		for(int i=optind; i<argc; ++i)
-			if (!lib.process_phrase(argv[i], *io, non_interactive))
+			if (!lib.process_phrase(argv[i], *io, non_interactive, json_output))
 				return EXIT_FAILURE;
 	} else if (!non_interactive) {
 
