@@ -2,6 +2,7 @@
 #define _LIBWRAPPER_HPP_
 
 #include <string>
+#include <cstring>
 #include <vector>
 
 #include "file.hpp"
