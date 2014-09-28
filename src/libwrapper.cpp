@@ -213,10 +213,13 @@ void Library::LookupWithRule(const string &str, TSearchResultList& res_list)
 
 void Library::LookupData(const string &str, TSearchResultList& res_list)
 {
-	std::vector<gchar *> drl[ndicts()];
-	if (!Libs::LookupData(str.c_str(), drl))
+	size_t dicts_count = ndicts();
+	std::vector< std::vector<gchar *> > drl;
+	for (int idict=0; idict<dicts_count; ++idict)
+		drl.push_back(std::vector<gchar *>());
+	if (!Libs::LookupData(str.c_str(), &drl[0]))
 		return;
-	for (int idict=0; idict<ndicts(); ++idict)
+	for (int idict=0; idict<dicts_count; ++idict)
 		for (std::vector<gchar *>::size_type j=0; j<drl[idict].size(); ++j) {
 			SimpleLookup(drl[idict][j], res_list);
 			g_free(drl[idict][j]);
