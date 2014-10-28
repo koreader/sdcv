@@ -122,6 +122,7 @@ static string parse_data(const gchar *data)
 		switch (*p++) {
 		case 'm':
 		case 'l': //need more work...
+		case 'k':
 		case 'g':
 			sec_size = strlen(p);
 			if (sec_size) {
