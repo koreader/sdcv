@@ -120,10 +120,12 @@ static string parse_data(const gchar *data)
 	p+=sizeof(guint32);
 	while (guint32(p - data)<data_size) {
 		switch (*p++) {
-		case 'm':
-		case 'l': //need more work...
-		case 'k':
-		case 'g':
+		case 'm': // plain text
+		case 'l': // locale encoded data, need more work...
+		case 'k': // PowerWord's data
+		case 'h': // HTML data
+		case 'g': // pango markup data
+		case 'w': // WikiMedia markup data
 			sec_size = strlen(p);
 			if (sec_size) {
 				res+="\n";
