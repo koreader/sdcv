@@ -589,7 +589,7 @@ bool offset_index::save_cache(const std::string& url)
 		if (fwrite(&wordoffset[0], sizeof(wordoffset[0]), wordoffset.size(), out)!=wordoffset.size())
 			continue;
 		fclose(out);
-		printf("save to cache %s\n", url.c_str());
+		fprintf(stderr, "save to cache %s\n", url.c_str());
 		return true;
 	}
 	return false;
