@@ -30,7 +30,7 @@ AM_ICONV
 
 AC_FUNC_MMAP
 
-AC_CHECK_LIB(z,zlibVersion,LIBS="$LIBS -lz",[AC_MSG_ERROR([zlib not found])])
+AC_CHECK_LIB(z,zlibVersion,LIBS="$LIBS ",[AC_MSG_ERROR([zlib not found])])
 
 # Check for readline support
 #SDCV_CHECK_READLINE
