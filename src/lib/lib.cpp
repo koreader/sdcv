@@ -55,8 +55,8 @@ bool DictInfo::load_from_ifo_file(const std::string& ifofilename,
   if (!g_file_get_contents(ifofilename.c_str(), &buffer, NULL, NULL))
     return false;
   
-#define TREEDICT_MAGIC_DATA "StarDict's treedict ifo file\nversion=2.4.2\n"
-#define DICT_MAGIC_DATA "StarDict's dict ifo file\nversion=2.4.2\n"
+  static const char TREEDICT_MAGIC_DATA[] = "StarDict's treedict ifo file";
+  static const char DICT_MAGIC_DATA[] = "StarDict's dict ifo file";
   const gchar *magic_data=istreedict ? TREEDICT_MAGIC_DATA : DICT_MAGIC_DATA;
   if (!g_str_has_prefix(buffer, magic_data)) {
     g_free(buffer);
