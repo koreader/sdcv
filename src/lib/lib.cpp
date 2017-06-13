@@ -16,7 +16,7 @@
 
 #include "lib.h"
 
-// Notice: read src/tools/DICTFILE_FORMAT for the dictionary 
+// Notice: read src/tools/DICTFILE_FORMAT for the dictionary
 // file's format information!
 
 
@@ -26,19 +26,19 @@ static inline bool bIsVowel(gchar inputchar)
   return( ch=='A' || ch=='E' || ch=='I' || ch=='O' || ch=='U' );
 }
 
-static bool bIsPureEnglish(const gchar *str) 
-{ 
+static bool bIsPureEnglish(const gchar *str)
+{
   // i think this should work even when it is UTF8 string :).
-  for (int i=0; str[i]!=0; i++) 
+  for (int i=0; str[i]!=0; i++)
     //if(str[i]<0)
     //if(str[i]<32 || str[i]>126) // tab equal 9,so this is not OK.
     // Better use isascii() but not str[i]<0 while char is default unsigned in arm
-    if (!isascii(str[i])) 
-            return false;            
-  return true;	
+    if (!isascii(str[i]))
+            return false;
+  return true;
 }
 
-static inline gint stardict_strcmp(const gchar *s1, const gchar *s2) 
+static inline gint stardict_strcmp(const gchar *s1, const gchar *s2)
 {
   gint a=g_ascii_strcasecmp(s1, s2);
   if (a == 0)
@@ -54,7 +54,7 @@ bool DictInfo::load_from_ifo_file(const std::string& ifofilename,
   gchar *buffer;
   if (!g_file_get_contents(ifofilename.c_str(), &buffer, NULL, NULL))
     return false;
-  
+
   static const char TREEDICT_MAGIC_DATA[] = "StarDict's treedict ifo file";
   static const char DICT_MAGIC_DATA[] = "StarDict's dict ifo file";
   const gchar *magic_data=istreedict ? TREEDICT_MAGIC_DATA : DICT_MAGIC_DATA;
@@ -64,7 +64,7 @@ bool DictInfo::load_from_ifo_file(const std::string& ifofilename,
   }
 
   gchar *p1,*p2,*p3;
-  
+
   p1 = buffer + strlen(magic_data)-1;
 
   p2 = strstr(p1,"\nwordcount=");
@@ -72,7 +72,7 @@ bool DictInfo::load_from_ifo_file(const std::string& ifofilename,
     g_free(buffer);
     return false;
   }
-  
+
   p3 = strchr(p2+ sizeof("\nwordcount=")-1,'\n');
   gchar *tmpstr = (gchar *)g_memdup(p2+sizeof("\nwordcount=")-1, p3-(p2+sizeof("\nwordcount=")-1)+1);
   tmpstr[p3-(p2+sizeof("\nwordcount=")-1)] = '\0';
@@ -91,20 +91,20 @@ bool DictInfo::load_from_ifo_file(const std::string& ifofilename,
     index_file_size = atol(tmpstr);
     g_free(tmpstr);
   } else {
-  
+
     p2 = strstr(p1,"\nidxfilesize=");
     if (!p2) {
       g_free(buffer);
       return false;
     }
-    
+
     p3 = strchr(p2+ sizeof("\nidxfilesize=")-1,'\n');
     tmpstr = (gchar *)g_memdup(p2+sizeof("\nidxfilesize=")-1, p3-(p2+sizeof("\nidxfilesize=")-1)+1);
     tmpstr[p3-(p2+sizeof("\nidxfilesize=")-1)] = '\0';
     index_file_size = atol(tmpstr);
     g_free(tmpstr);
   }
-	
+
   p2 = strstr(p1,"\nbookname=");
 
   if (!p2) {
@@ -152,7 +152,7 @@ bool DictInfo::load_from_ifo_file(const std::string& ifofilename,
   }
 
   p2 = strstr(p1,"\nsametypesequence=");
-  if (p2) {		
+  if (p2) {
     p2+=sizeof("\nsametypesequence=")-1;
     p3 = strchr(p2, '\n');
     sametypesequence.assign(p2, p3-p2);
@@ -160,39 +160,39 @@ bool DictInfo::load_from_ifo_file(const std::string& ifofilename,
 
   g_free(buffer);
 
-  return true;		
+  return true;
 }
 //===================================================================
 DictBase::DictBase()
-{	
-	dictfile = NULL;	
+{
+	dictfile = NULL;
 	cache_cur =0;
 }
 
 DictBase::~DictBase()
-{	
+{
 	if (dictfile)
 		fclose(dictfile);
 }
 
 gchar* DictBase::GetWordData(guint32 idxitem_offset, guint32 idxitem_size)
 {
-  for (int i=0; i<WORDDATA_CACHE_NUM; i++)	
+  for (int i=0; i<WORDDATA_CACHE_NUM; i++)
     if (cache[i].data && cache[i].offset == idxitem_offset)
       return cache[i].data;
-  
+
   if (dictfile)
     fseek(dictfile, idxitem_offset, SEEK_SET);
-  
+
   gchar *data;
   if (!sametypesequence.empty()) {
     gchar *origin_data = (gchar *)g_malloc(idxitem_size);
-    
+
     if (dictfile)
       fread(origin_data, idxitem_size, 1, dictfile);
     else
       dictdzfile->read(origin_data, idxitem_offset, idxitem_size);
-    
+
     guint32 data_size;
     gint sametypesequence_len = sametypesequence.length();
     //there have sametypesequence_len char being omitted.
@@ -218,7 +218,7 @@ gchar* DictBase::GetWordData(guint32 idxitem_offset, guint32 idxitem_size)
       else
         data_size += sizeof(gchar);
       break;
-    }			
+    }
     data = (gchar *)g_malloc(data_size);
     gchar *p1,*p2;
     p1 = data + sizeof(guint32);
@@ -259,8 +259,8 @@ gchar* DictBase::GetWordData(guint32 idxitem_offset, guint32 idxitem_size)
 				p1+=sec_size;
 				p2+=sec_size;
 				break;
-      }							
-    }	
+      }
+    }
     //calculate the last item 's size.
     sec_size = idxitem_size - (p2-origin_data);
     *p1=sametypesequence[sametypesequence_len-1];
@@ -273,7 +273,7 @@ gchar* DictBase::GetWordData(guint32 idxitem_offset, guint32 idxitem_size)
     case 'g':
     case 'x':
       memcpy(p1, p2, sec_size);
-      p1 += sec_size;				
+      p1 += sec_size;
       *p1='\0';//add the end up '\0';
       break;
     case 'W':
@@ -294,18 +294,18 @@ gchar* DictBase::GetWordData(guint32 idxitem_offset, guint32 idxitem_size)
       }
       break;
     }
-    g_free(origin_data);		
+    g_free(origin_data);
     *reinterpret_cast<guint32 *>(data)=data_size;
-  } else {		
+  } else {
     data = (gchar *)g_malloc(idxitem_size + sizeof(guint32));
     if (dictfile)
-      fread(data+sizeof(guint32), idxitem_size, 1, dictfile);		
+      fread(data+sizeof(guint32), idxitem_size, 1, dictfile);
     else
       dictdzfile->read(data+sizeof(guint32), idxitem_offset, idxitem_size);
     *reinterpret_cast<guint32 *>(data)=idxitem_size+sizeof(guint32);
-  }	
+  }
   g_free(cache[cache_cur].data);
-  
+
   cache[cache_cur].data = data;
   cache[cache_cur].offset = idxitem_offset;
   cache_cur++;
@@ -352,7 +352,7 @@ bool DictBase::SearchData(std::vector<std::string> &SearchWords, guint32 idxitem
 							WordFind[j] = true;
 							++nfound;
 					}
-				
+
 
 				if (nfound==nWord)
 					return true;
@@ -378,12 +378,12 @@ bool DictBase::SearchData(std::vector<std::string> &SearchWords, guint32 idxitem
 		case 'x':
 			sec_size = idxitem_size - (p-origin_data);
 			for (j=0; j<nWord; j++)
-				if (!WordFind[j] && 
+				if (!WordFind[j] &&
 				    g_strstr_len(p, sec_size, SearchWords[j].c_str())) {
 						WordFind[j] = true;
 						++nfound;
 				}
-			
+
 
 			if (nfound==nWord)
 				return true;
@@ -402,7 +402,7 @@ bool DictBase::SearchData(std::vector<std::string> &SearchWords, guint32 idxitem
 					if (!WordFind[j] && strstr(p, SearchWords[j].c_str())) {
 							WordFind[j] = true;
 							++nfound;
-					}				
+					}
 
 				if (nfound==nWord)
 					return true;
@@ -487,7 +487,7 @@ private:
 	std::vector<gchar *> wordlist;
 };
 
-void offset_index::page_t::fill(gchar *data, gint nent, glong idx_) 
+void offset_index::page_t::fill(gchar *data, gint nent, glong idx_)
 {
 	idx=idx_;
 	gchar *p=data;
@@ -512,8 +512,9 @@ offset_index::~offset_index()
 inline const gchar *offset_index::read_first_on_page_key(glong page_idx)
 {
 	fseek(idxfile, wordoffset[page_idx], SEEK_SET);
-	guint32 page_size=wordoffset[page_idx+1]-wordoffset[page_idx];
-	fread(wordentry_buf, std::min(sizeof(wordentry_buf), page_size), 1, idxfile); //TODO: check returned values, deal with word entry that strlen>255.
+	unsigned int page_size=wordoffset[page_idx+1]-wordoffset[page_idx];
+	unsigned int buf_size=sizeof(wordentry_buf);
+	fread(wordentry_buf, std::min(buf_size, page_size), 1, idxfile); //TODO: check returned values, deal with word entry that strlen>255.
 	return wordentry_buf;
 }
 
@@ -541,7 +542,7 @@ bool offset_index::load_cache(const std::string& url)
                     g_stat(it->c_str(), &cachestat)!=0)
 			continue;
 		if (cachestat.st_mtime<idxstat.st_mtime)
-			continue;		
+			continue;
 		MapFile mf;
 		if (!mf.open(it->c_str(), cachestat.st_size))
 			continue;
@@ -603,7 +604,7 @@ bool offset_index::load(const std::string& url, gulong wc, gulong fsize)
 	if (!load_cache(url)) {//map file will close after finish of block
 		MapFile map_file;
 		if (!map_file.open(url.c_str(), fsize))
-			return false;		
+			return false;
 		const gchar *idxdatabuffer=map_file.begin();
 
 		const gchar *p1 = idxdatabuffer;
@@ -641,7 +642,7 @@ inline gulong offset_index::load_page(glong page_idx)
 	if (page_idx==glong(wordoffset.size()-2))
 		if ((nentr=wordcount%ENTR_PER_PAGE)==0)
 			nentr=ENTR_PER_PAGE;
-	
+
 
 	if (page_idx!=page.idx) {
 		page_data.resize(wordoffset[page_idx+1]-wordoffset[page_idx]);
@@ -696,7 +697,7 @@ bool offset_index::lookup(const char *str, glong &idx)
 				iFrom=iThisIndex+1;
 			else if (cmpint<0)
 				iTo=iThisIndex-1;
-			else {	
+			else {
 				bFound=true;
 				break;
 			}
@@ -704,7 +705,7 @@ bool offset_index::lookup(const char *str, glong &idx)
 		if (!bFound)
 			idx = iTo;    //prev
 		else
-			idx = iThisIndex;		
+			idx = iThisIndex;
 	}
 	if (!bFound) {
 		gulong netr=load_page(idx);
@@ -735,18 +736,18 @@ bool offset_index::lookup(const char *str, glong &idx)
 }
 
 wordlist_index::~wordlist_index()
-{	
+{
 	g_free(idxdatabuf);
 }
 
 bool wordlist_index::load(const std::string& url, gulong wc, gulong fsize)
 {
 	gzFile in = gzopen(url.c_str(), "rb");
-	if (in == NULL)	
-		return false;	
-		
+	if (in == NULL)
+		return false;
+
 	idxdatabuf = (gchar *)g_malloc(fsize);
-		
+
 	gulong len = gzread(in, idxdatabuf, fsize);
 	gzclose(in);
 	if (len < 0)
@@ -814,21 +815,21 @@ bool wordlist_index::lookup(const char *str, glong &idx)
 	if (!bFound)
 		idx = iFrom;    //next
 	else
-		idx = iThisIndex;		
+		idx = iThisIndex;
   }
   return bFound;
 }
 
 //===================================================================
 bool Dict::load(const std::string& ifofilename)
-{	
+{
 	gulong idxfilesize;
 	if (!load_ifofile(ifofilename, idxfilesize))
 		return false;
 
 	std::string fullfilename(ifofilename);
 	fullfilename.replace(fullfilename.length()-sizeof("ifo")+1, sizeof("ifo")-1, "dict.dz");
-	
+
 	if (g_file_test(fullfilename.c_str(), G_FILE_TEST_EXISTS)) {
 		dictdzfile.reset(new dictData);
 		if (!dictdzfile->open(fullfilename, 0)) {
@@ -846,7 +847,7 @@ bool Dict::load(const std::string& ifofilename)
 
 	fullfilename=ifofilename;
 	fullfilename.replace(fullfilename.length()-sizeof("ifo")+1, sizeof("ifo")-1, "idx.gz");
-	
+
 	if (g_file_test(fullfilename.c_str(), G_FILE_TEST_EXISTS)) {
 		idx_file.reset(new wordlist_index);
 	} else {
@@ -869,13 +870,13 @@ bool Dict::load_ifofile(const std::string& ifofilename, gulong &idxfilesize)
 	if (dict_info.wordcount==0)
 		return false;
 
-	
+
 
 	ifo_file_name=dict_info.ifo_file_name;
 	wordcount=dict_info.wordcount;
 	bookname=dict_info.bookname;
 
-	idxfilesize=dict_info.index_file_size;  
+	idxfilesize=dict_info.index_file_size;
 
 	sametypesequence=dict_info.sametypesequence;
 
@@ -885,13 +886,13 @@ bool Dict::load_ifofile(const std::string& ifofilename, gulong &idxfilesize)
 bool Dict::LookupWithRule(GPatternSpec *pspec, glong *aIndex, int iBuffLen)
 {
 	int iIndexCount=0;
-  
+
   for(guint32 i=0; i<narticles() && iIndexCount<iBuffLen-1; i++)
-    if (g_pattern_match_string(pspec, get_key(i)))        
+    if (g_pattern_match_string(pspec, get_key(i)))
 			aIndex[iIndexCount++]=i;
-            
-    aIndex[iIndexCount]= -1; // -1 is the end.	
-	
+
+    aIndex[iIndexCount]= -1; // -1 is the end.
+
   return (iIndexCount>0);
 }
 
@@ -903,7 +904,7 @@ Libs::Libs(progress_func_t f)
 }
 
 Libs::~Libs()
-{	
+{
 	for (std::vector<Dict *>::iterator p=oLib.begin(); p!=oLib.end(); ++p)
 		delete *p;
 }
@@ -920,19 +921,19 @@ void Libs::load_dict(const std::string& url)
 class DictLoader {
 public:
 	DictLoader(Libs& lib_): lib(lib_) {}
-	void operator()(const std::string& url, bool disable) { 
+	void operator()(const std::string& url, bool disable) {
 		if (!disable)
-			lib.load_dict(url); 
+			lib.load_dict(url);
 	}
 private:
 	Libs& lib;
 };
 
 void Libs::load(const strlist_t& dicts_dirs,
-		const strlist_t& order_list, 
+		const strlist_t& order_list,
 		const strlist_t& disable_list)
 {
-	for_each_file(dicts_dirs, ".ifo", order_list, disable_list, 
+	for_each_file(dicts_dirs, ".ifo", order_list, disable_list,
 		      DictLoader(*this));
 }
 
@@ -942,13 +943,13 @@ public:
 							 Libs& lib_) : prev(p), future(f), lib(lib_)
 	{
 	}
-	void operator()(const std::string& url, bool disable) { 
+	void operator()(const std::string& url, bool disable) {
 		if (!disable) {
 			Dict *dict=find(url);
 			if (dict)
 				future.push_back(dict);
 			else
-				lib.load_dict(url); 
+				lib.load_dict(url);
 		}
 	}
 private:
@@ -970,18 +971,18 @@ private:
 	}
 };
 
-void Libs::reload(const strlist_t& dicts_dirs, 
-									const strlist_t& order_list, 
+void Libs::reload(const strlist_t& dicts_dirs,
+									const strlist_t& order_list,
 									const strlist_t& disable_list)
 {
 	std::vector<Dict *> prev(oLib);
 	oLib.clear();
-	for_each_file(dicts_dirs, ".ifo", order_list, disable_list, 
+	for_each_file(dicts_dirs, ".ifo", order_list, disable_list,
 								DictReLoader(prev, oLib, *this));
 	for (std::vector<Dict *>::iterator it=prev.begin(); it!=prev.end(); ++it)
 		delete *it;
 }
-	
+
 const gchar *Libs::poGetCurrentWord(glong * iCurrent)
 {
   const gchar *poCurrentWord = NULL;
@@ -995,7 +996,7 @@ const gchar *Libs::poGetCurrentWord(glong * iCurrent)
       poCurrentWord = poGetWord(iCurrent[iLib],iLib);
     } else {
       word = poGetWord(iCurrent[iLib],iLib);
-      
+
       if (stardict_strcmp(poCurrentWord, word) > 0 )
 				poCurrentWord = word;
     }
@@ -1025,7 +1026,7 @@ Libs::poGetNextWord(const gchar *sWord, glong *iCurrent)
 			iCurrentLib = iLib;
 		}	else {
 			word = poGetWord(iCurrent[iLib],iLib);
-			
+
 			if (stardict_strcmp(poCurrentWord, word) > 0 ) {
 				poCurrentWord = word;
 				iCurrentLib = iLib;
@@ -1076,7 +1077,7 @@ Libs::poGetPreWord(glong * iCurrent)
 			}
 		}
 	}
-	
+
 	if (poCurrentWord) {
 		iCurrent[iCurrentLib]--;
 		for (std::vector<Dict *>::size_type iLib=0;iLib<oLib.size();iLib++) {
@@ -1117,7 +1118,7 @@ bool Libs::LookupSimilarWord(const gchar* sWord, glong & iWordIndex, int iLib)
 					bFound=true;
 			}
 			g_free(casestr);
-		}	
+		}
 		// Upper the first character and lower others.
 		if (!bFound) {
 			gchar *nextchar = g_utf8_next_char(sWord);
@@ -1131,14 +1132,14 @@ bool Libs::LookupSimilarWord(const gchar* sWord, glong & iWordIndex, int iLib)
 					bFound=true;
 			}
 			g_free(casestr);
-		}	
+		}
 	}
-	
-  if (bIsPureEnglish(sWord)) {		
+
+  if (bIsPureEnglish(sWord)) {
 		// If not Found , try other status of sWord.
 		int iWordLen=strlen(sWord);
     bool isupcase;
-		
+
 		gchar *sNewWord = (gchar *)g_malloc(iWordLen + 1);
 
 		//cut one char "s" or "d"
@@ -1159,7 +1160,7 @@ bool Libs::LookupSimilarWord(const gchar* sWord, glong & iWordIndex, int iLib)
 				}
 			}
 		}
-		
+
 		//cut "ly"
 		if(!bFound && iWordLen>2) {
 			isupcase = !strncmp(&sWord[iWordLen-2],"LY",2);
@@ -1167,9 +1168,9 @@ bool Libs::LookupSimilarWord(const gchar* sWord, glong & iWordIndex, int iLib)
 				strcpy(sNewWord,sWord);
 				sNewWord[iWordLen-2]='\0';  // cut "ly"
 				if (iWordLen>5 && sNewWord[iWordLen-3]==sNewWord[iWordLen-4]
-						&& !bIsVowel(sNewWord[iWordLen-4]) && 
+						&& !bIsVowel(sNewWord[iWordLen-4]) &&
 						bIsVowel(sNewWord[iWordLen-5])) {//doubled
-		      
+
 					sNewWord[iWordLen-3]='\0';
 					if( oLib[iLib]->Lookup(sNewWord, iIndex) )
 						bFound=true;
@@ -1184,7 +1185,7 @@ bool Libs::LookupSimilarWord(const gchar* sWord, glong & iWordIndex, int iLib)
 						}
 						if (!bFound)
 							sNewWord[iWordLen-3]=sNewWord[iWordLen-4];  //restore
-					}					                    	
+					}
 				}
 				if (!bFound) {
 					if (oLib[iLib]->Lookup(sNewWord, iIndex))
@@ -1200,7 +1201,7 @@ bool Libs::LookupSimilarWord(const gchar* sWord, glong & iWordIndex, int iLib)
 				}
 			}
 		}
-		
+
 		//cut "ing"
 		if(!bFound && iWordLen>3) {
 			isupcase = !strncmp(&sWord[iWordLen-3],"ING",3);
@@ -1208,8 +1209,8 @@ bool Libs::LookupSimilarWord(const gchar* sWord, glong & iWordIndex, int iLib)
 				strcpy(sNewWord,sWord);
 				sNewWord[iWordLen-3]='\0';
 				if ( iWordLen>6 && (sNewWord[iWordLen-4]==sNewWord[iWordLen-5])
-						 && !bIsVowel(sNewWord[iWordLen-5]) && 
-						 bIsVowel(sNewWord[iWordLen-6])) {  //doubled	  
+						 && !bIsVowel(sNewWord[iWordLen-5]) &&
+						 bIsVowel(sNewWord[iWordLen-6])) {  //doubled
 					sNewWord[iWordLen-4]='\0';
 					if (oLib[iLib]->Lookup(sNewWord, iIndex))
 						bFound=true;
@@ -1236,7 +1237,7 @@ bool Libs::LookupSimilarWord(const gchar* sWord, glong & iWordIndex, int iLib)
 								bFound=true;
 						}
 						g_free(casestr);
-					}						
+					}
 				}
 				if(!bFound) {
 					if (isupcase)
@@ -1252,25 +1253,25 @@ bool Libs::LookupSimilarWord(const gchar* sWord, glong & iWordIndex, int iLib)
 								bFound=true;
 						}
 						g_free(casestr);
-					}						
+					}
 				}
 			}
 		}
-		
+
 		//cut two char "es"
 		if(!bFound && iWordLen>3) {
-			isupcase = (!strncmp(&sWord[iWordLen-2],"ES",2) && 
-									(sWord[iWordLen-3] == 'S' || 
-									 sWord[iWordLen-3] == 'X' || 
-									 sWord[iWordLen-3] == 'O' || 
-									 (iWordLen >4 && sWord[iWordLen-3] == 'H' && 
-										(sWord[iWordLen-4] == 'C' || 
+			isupcase = (!strncmp(&sWord[iWordLen-2],"ES",2) &&
+									(sWord[iWordLen-3] == 'S' ||
+									 sWord[iWordLen-3] == 'X' ||
+									 sWord[iWordLen-3] == 'O' ||
+									 (iWordLen >4 && sWord[iWordLen-3] == 'H' &&
+										(sWord[iWordLen-4] == 'C' ||
 										 sWord[iWordLen-4] == 'S'))));
-			if (isupcase || 
-					(!strncmp(&sWord[iWordLen-2],"es",2) && 
-	   (sWord[iWordLen-3] == 's' || sWord[iWordLen-3] == 'x' || 
-	    sWord[iWordLen-3] == 'o' || 
-	    (iWordLen >4 && sWord[iWordLen-3] == 'h' && 
+			if (isupcase ||
+					(!strncmp(&sWord[iWordLen-2],"es",2) &&
+	   (sWord[iWordLen-3] == 's' || sWord[iWordLen-3] == 'x' ||
+	    sWord[iWordLen-3] == 'o' ||
+	    (iWordLen >4 && sWord[iWordLen-3] == 'h' &&
 	     (sWord[iWordLen-4] == 'c' || sWord[iWordLen-4] == 's'))))) {
 				strcpy(sNewWord,sWord);
 				sNewWord[iWordLen-2]='\0';
@@ -1286,7 +1287,7 @@ bool Libs::LookupSimilarWord(const gchar* sWord, glong & iWordIndex, int iLib)
 				}
 			}
 		}
-		
+
 		//cut "ed"
     if (!bFound && iWordLen>3) {
 			isupcase = !strncmp(&sWord[iWordLen-2],"ED",2);
@@ -1294,8 +1295,8 @@ bool Libs::LookupSimilarWord(const gchar* sWord, glong & iWordIndex, int iLib)
 				strcpy(sNewWord,sWord);
 				sNewWord[iWordLen-2]='\0';
 				if (iWordLen>5 && (sNewWord[iWordLen-3]==sNewWord[iWordLen-4])
-						&& !bIsVowel(sNewWord[iWordLen-4]) && 
-						bIsVowel(sNewWord[iWordLen-5])) {//doubled	            
+						&& !bIsVowel(sNewWord[iWordLen-4]) &&
+						bIsVowel(sNewWord[iWordLen-5])) {//doubled
 					sNewWord[iWordLen-3]='\0';
 					if (oLib[iLib]->Lookup(sNewWord, iIndex))
 						bFound=true;
@@ -1326,7 +1327,7 @@ bool Libs::LookupSimilarWord(const gchar* sWord, glong & iWordIndex, int iLib)
 				}
 			}
 		}
-		
+
 		// cut "ied" , add "y".
     if (!bFound && iWordLen>3) {
 			isupcase = !strncmp(&sWord[iWordLen-3],"IED",3);
@@ -1349,7 +1350,7 @@ bool Libs::LookupSimilarWord(const gchar* sWord, glong & iWordIndex, int iLib)
 				}
 			}
 		}
-    
+
 		// cut "ies" , add "y".
     if (!bFound && iWordLen>3) {
 			isupcase = !strncmp(&sWord[iWordLen-3],"IES",3);
@@ -1391,7 +1392,7 @@ bool Libs::LookupSimilarWord(const gchar* sWord, glong & iWordIndex, int iLib)
 				}
 			}
 		}
-		
+
 		// cut "est".
     if (!bFound && iWordLen>3) {
 			isupcase = !strncmp(&sWord[iWordLen-3], "EST", 3);
@@ -1410,10 +1411,10 @@ bool Libs::LookupSimilarWord(const gchar* sWord, glong & iWordIndex, int iLib)
 				}
 			}
 		}
-		
+
 		g_free(sNewWord);
-	}	
-	
+	}
+
 	if (bFound)
 		iWordIndex = iIndex;
 #if 0
@@ -1445,7 +1446,7 @@ inline bool operator<(const Fuzzystruct & lh, const Fuzzystruct & rh) {
 
   if (lh.pMatchWord && rh.pMatchWord)
     return stardict_strcmp(lh.pMatchWord, rh.pMatchWord)<0;
-  
+
   return false;
 }
 
@@ -1462,7 +1463,7 @@ bool Libs::LookupWithFuzzy(const gchar *sWord, gchar *reslist[], gint reslist_si
   if (sWord[0] == '\0')
     return false;
 
-	Fuzzystruct oFuzzystruct[reslist_size];       
+	Fuzzystruct oFuzzystruct[reslist_size];
 
   for (int i=0; i<reslist_size; i++) {
     oFuzzystruct[i].pMatchWord = NULL;
@@ -1493,13 +1494,13 @@ bool Libs::LookupWithFuzzy(const gchar *sWord, gchar *reslist[], gint reslist_si
 				sCheck = poGetWord(index,iLib);
 				// tolower and skip too long or too short words
 				iCheckWordLen = g_utf8_strlen(sCheck, -1);
-				if (iCheckWordLen-ucs4_str2_len>=iMaxDistance || 
+				if (iCheckWordLen-ucs4_str2_len>=iMaxDistance ||
 						ucs4_str2_len-iCheckWordLen>=iMaxDistance)
 					continue;
 				ucs4_str1 = g_utf8_to_ucs4_fast(sCheck, -1, NULL);
 				if (iCheckWordLen > ucs4_str2_len)
 					ucs4_str1[ucs4_str2_len]=0;
-				unicode_strdown(ucs4_str1);				
+				unicode_strdown(ucs4_str1);
 
 				iDistance = oEditDistance.CalEditDistance(ucs4_str1, ucs4_str2, iMaxDistance);
 				g_free(ucs4_str1);
@@ -1509,7 +1510,7 @@ bool Libs::LookupWithFuzzy(const gchar *sWord, gchar *reslist[], gint reslist_si
 					bool bAlreadyInList = false;
 					int iMaxDistanceAt=0;
 					for (int j=0; j<reslist_size; j++) {
-						if (oFuzzystruct[j].pMatchWord && 
+						if (oFuzzystruct[j].pMatchWord &&
 								strcmp(oFuzzystruct[j].pMatchWord,sCheck)==0 ) {//already in list
 							bAlreadyInList = true;
 							break;
@@ -1536,13 +1537,13 @@ bool Libs::LookupWithFuzzy(const gchar *sWord, gchar *reslist[], gint reslist_si
     }   // ok for search
   }   // each lib
   g_free(ucs4_str2);
-	
+
   if (Found)// sort with distance
     std::sort(oFuzzystruct, oFuzzystruct+reslist_size);
-	
+
 	for (gint i=0; i<reslist_size; ++i)
     reslist[i]=oFuzzystruct[i].pMatchWord;
-	
+
   return Found;
 }
 
@@ -1551,15 +1552,15 @@ inline bool less_for_compare(const char *lh, const char *rh) {
 }
 
 gint Libs::LookupWithRule(const gchar *word, gchar **ppMatchWord)
-{	
+{
   glong aiIndex[MAX_MATCH_ITEM_PER_LIB+1];
   gint iMatchCount = 0;
   GPatternSpec *pspec = g_pattern_spec_new(word);
-	
+
   for (std::vector<Dict *>::size_type iLib=0; iLib<oLib.size(); iLib++) {
-    //if(oLibs.LookdupWordsWithRule(pspec,aiIndex,MAX_MATCH_ITEM_PER_LIB+1-iMatchCount,iLib)) 
+    //if(oLibs.LookdupWordsWithRule(pspec,aiIndex,MAX_MATCH_ITEM_PER_LIB+1-iMatchCount,iLib))
     // -iMatchCount,so save time,but may got less result and the word may repeat.
-    
+
     if (oLib[iLib]->LookupWithRule(pspec,aiIndex, MAX_MATCH_ITEM_PER_LIB+1)) {
       if (progress_func)
 				progress_func();
@@ -1578,10 +1579,10 @@ gint Libs::LookupWithRule(const gchar *word, gchar **ppMatchWord)
     }
   }
   g_pattern_spec_free(pspec);
-	
+
   if (iMatchCount)// sort it.
-    std::sort(ppMatchWord, ppMatchWord+iMatchCount, less_for_compare); 
-	
+    std::sort(ppMatchWord, ppMatchWord+iMatchCount, less_for_compare);
+
   return iMatchCount;
 }
 
@@ -1652,7 +1653,7 @@ bool Libs::LookupData(const gchar *sWord, std::vector<gchar *> *reslist)
 	for (i=0; i<oLib.size(); ++i)
 		if (!reslist[i].empty())
 			break;
-			
+
 	return i!=oLib.size();
 }
 

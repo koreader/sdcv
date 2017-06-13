@@ -7354,7 +7354,7 @@ if ${ac_cv_lib_z_zlibVersion+:} false; then :
   $as_echo_n "(cached) " >&6
 else
   ac_check_lib_save_LIBS=$LIBS
-LIBS="$LIBS"
+LIBS="-lz  $LIBS"
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -7385,7 +7385,7 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_z_zlibVersion" >&5
 $as_echo "$ac_cv_lib_z_zlibVersion" >&6; }
 if test "x$ac_cv_lib_z_zlibVersion" = xyes; then :
-  LIBS="$LIBS"
+  LIBS="$LIBS -lz"
 else
   as_fn_error $? "zlib not found" "$LINENO" 5
 fi
