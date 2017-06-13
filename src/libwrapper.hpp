@@ -32,10 +32,10 @@ typedef TSearchResultList::iterator PSearchResult;
 //of it
 class Library : public Libs {
 public:
-	Library(bool uinput, bool uoutput) : 
+	Library(bool uinput, bool uoutput) :
 		utf8_input(uinput), utf8_output(uoutput) {}
 
-	bool process_phrase(const char *loc_str, read_line &io, bool force=false, bool json=false);
+	bool process_phrase(const char *loc_str, read_line &io, bool force=false, bool json=false, bool no_fuzzy=false);
 private:
 	bool utf8_input, utf8_output;
 

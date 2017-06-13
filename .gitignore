@@ -2,9 +2,11 @@
 Makefile
 *.log
 *.a
+*.swp
 src/sdcv
 config.h
 config.status
+autom4te.cache
 po/Makefile.in
 po/POTFILES
 src/.deps/

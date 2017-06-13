@@ -1,4 +1,4 @@
-/* 
+/*
  * This file part of sdcv - console version of Stardict program
  * http://sdcv.sourceforge.net
  * Copyright (C) 2005-2006 Evgeniy <dushistov@mail.ru>
@@ -157,7 +157,7 @@ static string parse_data(const gchar *data)
 			break;
 		case 'y':
 			sec_size = strlen(p);
-			sec_size++;				
+			sec_size++;
 			break;
 		case 'W':
 		case 'P':
@@ -168,21 +168,21 @@ static string parse_data(const gchar *data)
 		p += sec_size;
 	}
 
-  
+
 	return res;
 }
 
 void Library::SimpleLookup(const string &str, TSearchResultList& res_list)
-{	
+{
 	glong ind;
 	res_list.reserve(ndicts());
 	for (gint idict=0; idict<ndicts(); ++idict)
 		if (SimpleLookupWord(str.c_str(), ind, idict))
 			res_list.push_back(
-				TSearchResult(dict_name(idict), 
+				TSearchResult(dict_name(idict),
 					      poGetWord(ind, idict),
 					      parse_data(poGetWordData(ind, idict))));
-	
+
 }
 
 void Library::LookupWithFuzzy(const string &str, TSearchResultList& res_list)
@@ -192,8 +192,8 @@ void Library::LookupWithFuzzy(const string &str, TSearchResultList& res_list)
 	gchar *fuzzy_res[MAXFUZZY];
 	if (!Libs::LookupWithFuzzy(str.c_str(), fuzzy_res, MAXFUZZY))
 		return;
-	
-	for (gchar **p=fuzzy_res, **end=fuzzy_res+MAXFUZZY; 
+
+	for (gchar **p=fuzzy_res, **end=fuzzy_res+MAXFUZZY;
 	     p!=end && *p; ++p) {
 		SimpleLookup(*p, res_list);
 		g_free(*p);
@@ -238,11 +238,11 @@ void Library::print_search_result(FILE *out, const TSearchResult & res)
 		loc_exp=utf8_to_locale_ign_err(res.exp);
 	}
 
-			
+
 	fprintf(out, "-->%s\n-->%s\n%s\n\n",
-		utf8_output ? res.bookname.c_str() : loc_bookname.c_str(), 
-		utf8_output ? res.def.c_str() : loc_def.c_str(), 
-		utf8_output ? res.exp.c_str() : loc_exp.c_str()); 
+		utf8_output ? res.bookname.c_str() : loc_bookname.c_str(),
+		utf8_output ? res.def.c_str() : loc_def.c_str(),
+		utf8_output ? res.exp.c_str() : loc_exp.c_str());
 }
 
 class sdcv_pager {
@@ -266,18 +266,18 @@ private:
 	FILE *output;
 };
 
-bool Library::process_phrase(const char *loc_str, read_line &io, bool force, bool json)
+bool Library::process_phrase(const char *loc_str, read_line &io, bool force, bool json, bool no_fuzzy)
 {
 	if (NULL==loc_str)
 		return true;
 
 	std::string query;
 
-	
+
 	analyze_query(loc_str, query);
 	if (!query.empty())
 		io.add_to_history(query.c_str());
-	
+
 
 
 	gsize bytes_read;
@@ -299,7 +299,7 @@ bool Library::process_phrase(const char *loc_str, read_line &io, bool force, boo
 	if (str[0]=='\0')
 		return true;
 
-  
+
 	TSearchResultList res_list;
 
 
@@ -312,7 +312,7 @@ bool Library::process_phrase(const char *loc_str, read_line &io, bool force, boo
 		break;
 	case qtSIMPLE:
 		SimpleLookup(str, res_list);
-		if (res_list.empty())
+		if (res_list.empty() && !no_fuzzy)
 			LookupWithFuzzy(str, res_list);
 		break;
 	case qtDATA:
@@ -322,7 +322,7 @@ bool Library::process_phrase(const char *loc_str, read_line &io, bool force, boo
 		/*nothing*/;
 	}
 
-	if (!res_list.empty()) {    
+	if (!res_list.empty()) {
 		/* try to be more clever, if there are
 		   one or zero results per dictionary show all
 		*/
@@ -331,7 +331,7 @@ bool Library::process_phrase(const char *loc_str, read_line &io, bool force, boo
 		if (!force) {
 			DictResMap res_per_dict;
 			for(TSearchResultList::iterator ptr=res_list.begin(); ptr!=res_list.end(); ++ptr){
-				std::pair<DictResMap::iterator, DictResMap::iterator> r = 
+				std::pair<DictResMap::iterator, DictResMap::iterator> r =
 					res_per_dict.equal_range(ptr->bookname);
 				DictResMap tmp(r.first, r.second);
 				if (tmp.empty()) //there are no yet such bookname in map
@@ -347,7 +347,7 @@ bool Library::process_phrase(const char *loc_str, read_line &io, bool force, boo
 		}//if (!force)
 
 		if (!show_all_results && !force) {
-			printf(_("Found %d items, similar to %s.\n"), res_list.size(), 
+			printf(_("Found %d items, similar to %s.\n"), res_list.size(),
 			       utf8_output ? str : utf8_to_locale_ign_err(str).c_str());
 			for (size_t i=0; i<res_list.size(); ++i) {
 				string loc_bookname, loc_def;
@@ -361,22 +361,22 @@ bool Library::process_phrase(const char *loc_str, read_line &io, bool force, boo
 			for (;;) {
 				string str_choise;
 				printf(_("Your choice[-1 to abort]: "));
-				
+
 				if(!stdio_getline(stdin, str_choise)){
 					putchar('\n');
 					exit(EXIT_SUCCESS);
 				}
 				sscanf(str_choise.c_str(), "%d", &choise);
-				if (choise>=0 && choise<int(res_list.size())) { 
+				if (choise>=0 && choise<int(res_list.size())) {
 					sdcv_pager pager;
 					print_search_result(pager.get_stream(), res_list[choise]);
 					break;
 				} else if (choise==-1)
 					break;
 				else
-					printf(_("Invalid choise.\nIt must be from 0 to %d or -1.\n"), 
-					       res_list.size()-1);	  
-			}		
+					printf(_("Invalid choise.\nIt must be from 0 to %d or -1.\n"),
+					       res_list.size()-1);
+			}
 		} else {
 			sdcv_pager pager(force);
 			if (!json) {
@@ -407,12 +407,12 @@ bool Library::process_phrase(const char *loc_str, read_line &io, bool force, boo
 				free(out);
 			}
 		}
-    
+
 	} else {
 		string loc_str;
 		if (!utf8_output)
 			loc_str=utf8_to_locale_ign_err(str);
-    
+
 		fprintf(stderr, _("Nothing similar to %s, sorry :(\n"), utf8_output ? str : loc_str.c_str());
 	}
 	g_free(str);

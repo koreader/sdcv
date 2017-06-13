@@ -1,4 +1,4 @@
-/* 
+/*
  * This file part of sdcv - console version of Stardict program
  * http://sdcv.sourceforge.net
  * Copyright (C) 2003-2006 Evgeniy <dushistov@mail.ru>
@@ -49,6 +49,7 @@ struct option longopts[] ={
 	{"use-dict", required_argument, NULL, 'u'},
 	{"non-interactive", no_argument, NULL, 'n'},
 	{"json-output", no_argument, NULL, 'j'},
+	{"non-fuzzy-fallback", no_argument, NULL, 'f'},
 	{"utf8-output", no_argument, NULL, 0},
 	{"utf8-input", no_argument, NULL, 1},
 	{"data-dir", required_argument, NULL, 2},
@@ -72,9 +73,9 @@ struct CreateDisableList {
 	void operator()(const std::string& filename, bool) {
 		DictInfo dict_info;
 		if (dict_info.load_from_ifo_file(filename, false) &&
-		    std::find(enable_list.begin(), enable_list.end(), 
+		    std::find(enable_list.begin(), enable_list.end(),
 			      dict_info.bookname)==enable_list.end())
-			disable_list.push_back(dict_info.ifo_file_name);		
+			disable_list.push_back(dict_info.ifo_file_name);
 	}
 private:
 	const strlist_t& enable_list;
@@ -87,22 +88,22 @@ int main(int argc, char *argv[])
 #if ENABLE_NLS
 	bindtextdomain (PACKAGE, LOCALEDIR);
 	textdomain (PACKAGE);
-#endif	 
+#endif
 	int optc;
-	bool h = false, v = false, show_list_dicts=false, 
-		use_book_name=false, non_interactive=false, 
-		json_output=false,
+	bool h = false, v = false, show_list_dicts=false,
+		use_book_name=false, non_interactive=false,
+		json_output=false, non_fuzzy_fallback=false,
 		utf8_output=false, utf8_input=false;
 	strlist_t enable_list;
 	string data_dir;
 	int option_index = 0;
-	while ((optc = getopt_long (argc, argv, "hvu:lnj", longopts,
+	while ((optc = getopt_long (argc, argv, "hvu:lnjf", longopts,
 				    &option_index))!=-1)
 		switch (optc){
 		case 0:
 			utf8_output=true;
 			break;
-		case 1:   
+		case 1:
 			utf8_input=true;
 			break;
 		case 2:
@@ -127,13 +128,16 @@ int main(int argc, char *argv[])
 		case 'j':
 			json_output=true;
 			break;
+		case 'f':
+			non_fuzzy_fallback=true;
+			break;
 		case '?':
-			fprintf(stderr, 
-				_("Unknown option.\nTry '%s --help' for more information.\n"), 
+			fprintf(stderr,
+				_("Unknown option.\nTry '%s --help' for more information.\n"),
 				argv[0]);
 			return EXIT_FAILURE;
 		}
-  
+
 	if (h) {
 		printf("sdcv - console version of StarDict.\n");
 		printf(_("Usage: %s [OPTIONS] words\n"), argv[0]);
@@ -143,6 +147,7 @@ int main(int argc, char *argv[])
 		printf(_("-u, --use-dict bookname  for search use only dictionary with this bookname\n"));
 		printf(_("-n, --non-interactive    for use in scripts\n"));
 		printf(_("-j, --json-output        for use in scripts\n"));
+		printf(_("-f, --non-fuzzy-fallback disable fuzzy fallback in simple query\n"));
 		printf(_("--utf8-output            output must be in utf8\n"));
 		printf(_("--utf8-input             input of sdcv in utf8\n"));
 		printf(_("--data-dir path/to/dir   use this directory as path to stardict data directory\n"));
@@ -169,34 +174,34 @@ int main(int argc, char *argv[])
 
 	dicts_dir_list.push_back(std::string(g_get_home_dir())+G_DIR_SEPARATOR+
 				 ".stardict"+G_DIR_SEPARATOR+"dic");
-	dicts_dir_list.push_back(data_dir);   
+	dicts_dir_list.push_back(data_dir);
 
 	if (show_list_dicts) {
 		printf(_("Dictionary's name   Word count\n"));
 		PrintDictInfo print_dict_info;
 		strlist_t order_list, disable_list;
-		for_each_file(dicts_dir_list, ".ifo",  order_list, 
-			      disable_list, print_dict_info); 
-    
+		for_each_file(dicts_dir_list, ".ifo",  order_list,
+			      disable_list, print_dict_info);
+
 		return EXIT_SUCCESS;
 	}
 
 	strlist_t disable_list;
 	//DictInfoList  dict_info_list;
-  
+
 	if (use_book_name) {
 		strlist_t empty_list;
 		CreateDisableList create_disable_list(enable_list, disable_list);
-		for_each_file(dicts_dir_list, ".ifo", empty_list, 
+		for_each_file(dicts_dir_list, ".ifo", empty_list,
 			      empty_list, create_disable_list);
 	}
 
-    
+
 	string conf_dir = string(g_get_home_dir())+G_DIR_SEPARATOR+".stardict";
 	if (g_mkdir(conf_dir.c_str(), S_IRWXU)==-1 && errno!=EEXIST)
 		fprintf(stderr, _("g_mkdir failed: %s\n"), strerror(errno));
 
-  
+
 	Library lib(utf8_input, utf8_output);
 	strlist_t empty_list;
 	lib.load(dicts_dir_list, empty_list, disable_list);
@@ -205,7 +210,7 @@ int main(int argc, char *argv[])
 	std::auto_ptr<read_line> io(create_readline_object());
 	if (optind < argc) {
 		for(int i=optind; i<argc; ++i)
-			if (!lib.process_phrase(argv[i], *io, non_interactive, json_output))
+			if (!lib.process_phrase(argv[i], *io, non_interactive, json_output, non_fuzzy_fallback))
 				return EXIT_FAILURE;
 	} else if (!non_interactive) {
 
@@ -219,8 +224,8 @@ int main(int argc, char *argv[])
 		putchar('\n');
 	} else
 		fprintf(stderr, _("There are no words/phrases to translate.\n"));
-	
-    
+
+
 	return EXIT_SUCCESS;
 }
 
