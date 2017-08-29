@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
 			break;
 		case 'u':
 			use_book_name=true;
-			enable_list.push_back(locale_to_utf8(optarg));
+			enable_list.push_back(optarg);
 			break;
 		case 'n':
 			non_interactive=true;
